@@ -1,0 +1,100 @@
+//可设定循环按键
+import key;
+import winex;
+import win.ui;
+import mouse;
+import mouse.hook;
+/*DSG{{*/
+var winform = win.form(text="可设定循环按键 ";right=409;bottom=239;border="dialog frame";parent=...)
+winform.add(
+btnLoop={cls="button";text="开始循环";left=132;top=167;right=237;bottom=199;z=1};
+btnQuit={cls="button";text="退出程序";left=268;top=167;right=373;bottom=199;z=2};
+button2={cls="button";text="点击开始获取坐标";left=34;top=29;right=165;bottom=52;z=10};
+edit={cls="edit";text="X";left=246;top=28;right=282;bottom=51;edge=1;z=8};
+edit2={cls="edit";text="1000";left=39;top=118;right=104;bottom=140;align="center";edge=1;z=13};
+editSetting={cls="edit";text="1";left=120;top=70;right=168;bottom=93;edge=1;multiline=1;num=1;z=3};
+editWndTitle={cls="edit";text="Y";left=340;top=28;right=383;bottom=51;edge=1;multiline=1;z=5};
+editn={cls="edit";text="0";left=132;top=207;right=187;bottom=232;edge=1;z=12};
+flag={cls="static";text="0";left=309;top=72;right=338;bottom=102;hide=1;transparent=1;z=11};
+lbRepeat={cls="static";text="设定循环次数:";left=34;top=72;right=112;bottom=88;transparent=1;z=4};
+lbRepeat2={cls="static";text="必须小于200000";left=173;top=71;right=279;bottom=87;transparent=1;z=7};
+lbTitle={cls="static";text="Y";left=301;top=30;right=317;bottom=46;notify=1;transparent=1;z=6};
+static={cls="static";text="X";left=205;top=33;right=223;bottom=47;transparent=1;z=9};
+static2={cls="static";text="时间间隔（ms）";left=121;top=121;right=227;bottom=137;notify=1;transparent=1;z=14};
+static3={cls="static";text="已循环次数";left=39;top=214;right=108;bottom=230;notify=1;transparent=1;z=15}
+)
+/*}}*/
+
+getSettingCount = function(){
+
+	//getSettingCount, 并转换为数值
+	var num = tonumber(winform.editSetting.text) 
+	
+	//输入正确性检测
+	if( num && num > 200000){ 
+		winform.editSetting.showErrorTip("错误","请输入小于200000的数值"   )  
+	}
+	
+	//返回数值
+	return num or 0;
+}
+
+winform.editSetting.onChange = function(){ 
+	getSettingCount(); //调用此函数检测正确性
+}
+
+winform.btnQuit.oncommand = function( ) { 
+    winform.close(); //关闭窗口 
+}
+
+winform.onClose = function(hwnd,message,wParam,lParam){
+     winform.close();
+}
+
+hk = mouse.hook();
+hk.proc = function(msg,x,y){
+    select(msg) {
+        case 0x202/*_WM_LBUTTONDOWN*/{
+          if(winform.edit.text!="X"){
+          winform.flag.text="0";
+          }
+        }
+        case 0x200/*_WM_MOUSEMOVE*/{
+             x,y=mouse.getPos();//得到当前光标的坐标
+            var text = tonumber(winform.flag.text);
+            if(text==1){
+            	 winform.edit.text = x;
+            winform.editWndTitle.text = y;
+            }
+        }
+    }   
+}
+
+winform.btnLoop.oncommand = function( ) {
+	var count = getSettingCount();
+	var x = tonumber(winform.edit.text);
+	var y = tonumber(winform.editWndTitle.text);
+	mouse.moveTo(x,y,true);
+ 	//autoClick(count);
+ 	  var interval = tonumber(winform.edit2.text)
+ 	var $x=0;
+	while($x<count){
+		$x=$x+1
+       mouse.click(x,y,true);
+      
+       if (interval==null){
+           interval = 1000;
+         }
+       win.delay(interval);
+       winform.editn.text=$x
+     }    
+}
+
+winform.button2.oncommand = function(id,event){
+	winform.flag.text ="1";
+}
+
+
+winform.show();
+//消息循环
+win.loopMessage(winform);
